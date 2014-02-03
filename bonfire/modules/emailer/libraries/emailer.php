@@ -36,8 +36,6 @@
  */
 class Emailer
 {
-
-
 	/**
 	 * Whether to send emails immediately or queue them by default.
 	 *
@@ -48,8 +46,7 @@ class Emailer
 	 *
 	 * @var bool
 	 */
-	public $queue_emails = FALSE;
-
+	public $queue_emails = false;
 
 	/**
 	 * Extra information about the running of the script and the sending of an immediate email.
@@ -67,7 +64,7 @@ class Emailer
 	 *
 	 * @var bool
 	 */
-	private $debug = FALSE;
+	private $debug = false;
 
 	/**
 	 * An error generated during the course of the script running.
@@ -77,7 +74,6 @@ class Emailer
 	 * @var string
 	 */
 	public $error = '';
-
 
 	/**
 	 * A pointer to the CodeIgniter instance.
@@ -126,37 +122,35 @@ class Emailer
 	public function send($data=array(), $queue_override=null)
 	{
 		// Make sure we have the information we need.
-		$to = isset($data['to']) ? $data['to'] : FALSE;
-		$from = settings_item('sender_email');
-		$subject = isset($data['subject']) ? $data['subject'] : FALSE;
-		$message = isset($data['message']) ? $data['message'] : FALSE;
-		$alt_message = isset($data['alt_message']) ? $data['alt_message'] : FALSE;
+		$to             = isset($data['to']) ? $data['to'] : false;
+		$from           = isset($data['from']) ? $data['from'] : settings_item('sender_email');
+		$subject        = isset($data['subject']) ? $data['subject'] : false;
+		$message        = isset($data['message']) ? $data['message'] : false;
+		$alt_message    = isset($data['alt_message']) ? $data['alt_message'] : false;
 
-		// If we don't have everything, return FALSE.
-		if ($to == FALSE || $subject == FALSE || $message == FALSE)
-		{
+		// If we don't have everything, return false
+		if ($to == false || $subject == false || $message == false) {
 			$this->error = lang('em_missing_data');
-			return FALSE;
+			return false;
 		}
 
-		// Wrap the $message in the email template.
+		// Wrap the $message in the email template, or strip HTML
 		$mailtype = settings_item('mailtype');
 		$templated = $message;
-		if ($mailtype == 'html')
-		{
-			$templated  = $this->ci->load->view('emailer/email/_header', null, TRUE);
+		if ($mailtype == 'html') {
+			$templated  = $this->ci->load->view('emailer/email/_header', null, true);
 			$templated .= $message;
-			$templated .= $this->ci->load->view('emailer/email/_footer', null, TRUE);
-		}
+			$templated .= $this->ci->load->view('emailer/email/_footer', null, true);
+		} else {
+            $templated = html_entity_decode(strip_tags($message), ENT_QUOTES, 'UTF-8');
+        }
 
 		// Should we put it in the queue?
-		if ($queue_override === TRUE || ($queue_override !== FALSE && $this->queue_emails == TRUE))
-		{
+		if ($queue_override === true || ($queue_override !== false && $this->queue_emails == true)) {
 			return $this->queue_email($to, $from, $subject, $templated, $alt_message);
 		}
 		// Otherwise, we're sending it right now.
-		else
-		{
+		else {
 			return $this->send_email($to, $from, $subject, $templated, $alt_message);
 		}
 
@@ -170,30 +164,28 @@ class Emailer
 	 * @access private
 	 *
 	 * @param string $to          The email to send the message to
-	 * @param string $from        The from email (Ignored in this method, but kept for consistency with the send_email method.
+	 * @param string $from        The from email (Ignored in this method, but kept for consistency with the send_email method)
 	 * @param string $subject     The subject line of the email
 	 * @param string $message     The text to be inserted into the template for HTML emails.
 	 * @param string $alt_message An optional, text-only version of the message to be sent with HTML emails.
 	 *
 	 * @return bool TRUE/FALSE	Whether it was successful or not.
 	 */
-	private function queue_email($to=null, $from=null, $subject=null, $message=null, $alt_message=FALSE)
+	private function queue_email($to=null, $from=null, $subject=null, $message=null, $alt_message=false)
 	{
 		$this->ci->db->set('to_email', $to);
 		$this->ci->db->set('subject', $subject);
 		$this->ci->db->set('message', $message);
 
-		if ($alt_message)
-		{
+		if ($alt_message) {
 			$this->ci->db->set('alt_message', $alt_message);
 		}
 
-		if ($this->debug)
-		{
+		if ($this->debug) {
 			$this->debug_message = lang('em_no_debug');
 		}
-		return $this->ci->db->insert('email_queue');
 
+		return $this->ci->db->insert('email_queue');
 	}//end queue_email
 
 	//--------------------------------------------------------------------
@@ -211,42 +203,39 @@ class Emailer
 	 *
 	 * @return bool TRUE/FALSE	Whether it was successful or not.
 	 */
-	private function send_email($to=null, $from=null, $subject=null, $message=null, $alt_message=FALSE)
+	private function send_email($to=null, $from=null, $subject=null, $message=null, $alt_message=false)
 	{
 		$this->ci->load->library('email');
 		$this->ci->load->model('settings/settings_model', 'settings_model');
-		$this->ci->email->initialize($this->ci->settings_model->select('name,value')->find_all_by('module', 'email'));
 
+		$this->ci->email->initialize($this->ci->settings_model->select('name,value')->find_all_by('module', 'email'));
 		$this->ci->email->set_newline("\r\n");
 		$this->ci->email->to($to);
 		$this->ci->email->from($from, settings_item('site.title'));
 		$this->ci->email->subject($subject);
 		$this->ci->email->message($message);
 
-		if ($alt_message)
-		{
+		if ($alt_message) {
 			$this->ci->email->set_alt_message($alt_message);
 		}
 
-		if ((defined('ENVIRONMENT') && ENVIRONMENT == 'development') && $this->ci->config->item('emailer.write_to_file') === TRUE) {
-			if (!function_exists('write_file')) {
+        $result = false;
+		if (defined('ENVIRONMENT') && ENVIRONMENT == 'development' && $this->ci->config->item('emailer.write_to_file') === true) {
+			if ( ! function_exists('write_file')) {
 				$this->ci->load->helper('file');
 			}
-			write_file($this->ci->config->item('log_path').str_replace(" ","_",strtolower($subject)).substr(md5($to.time()),0,8).".html",$message);
-			$result = TRUE;
-		}
-		else
-		{
+
+			write_file($this->ci->config->item('log_path') . str_replace(" ", "_", strtolower($subject)) . substr(md5($to.time()), 0, 8) . '.html', $message);
+			$result = true;
+		} else {
 			$result = $this->ci->email->send();
 		}
 
-		if ($this->debug)
-		{
+		if ($this->debug) {
 			$this->debug_message = $this->ci->email->print_debugger();
 		}
 
 		return $result;
-
 	}//end send_email()
 
 	//--------------------------------------------------------------------
@@ -266,11 +255,9 @@ class Emailer
 	 */
 	public function process_queue($limit=33)
 	{
-		$success = TRUE;
+		$success = true;
 
-		//$limit = 33; // 33 emails every 5 minutes = 400 emails/hour.
 		$this->ci->load->library('email');
-
 		$config_settings = $this->ci->settings_model->select('name,value')->find_all_by('module', 'email');
 
 		// Grab records where success = 0
@@ -278,59 +265,51 @@ class Emailer
 		$this->ci->db->where('success', 0);
 		$query = $this->ci->db->get('email_queue');
 
-		if ($query->num_rows() > 0)
-		{
-			$emails = $query->result();
-		}
-		else
-		{
-			return TRUE;
-		}
+		if ($query->num_rows() <= 0) {
+            return $success;
+        }
 
-		foreach($emails as $email)
-		{
+        $emails = $query->result();
+		foreach($emails as $email) {
 			echo '.';
 
 			$this->ci->email->clear();
 			$this->ci->email->initialize($config_settings);
 
 			$this->ci->email->from(settings_item('sender_email'), settings_item('site.title'));
-			$this->ci->email->to($email->to_email);
 
+			$this->ci->email->to($email->to_email);
 			$this->ci->email->subject($email->subject);
 			$this->ci->email->message($email->message);
+
 			$this->ci->email->set_newline("\r\n");
 
-			if ($email->alt_message)
-			{
+			if ($email->alt_message) {
 				$this->ci->email->set_alt_message($email->alt_message);
 			}
 
 			$prefix = $this->ci->db->dbprefix;
 
-			if ($this->ci->email->send() === TRUE)
-			{
+			if ($this->ci->email->send() === true) {
 				// Email was successfully sent
-				$sql = "UPDATE {$prefix}email_queue SET success=1, attempts=attempts+1, last_attempt = NOW(), date_sent = NOW() WHERE id = " .$email->id;
+                // @todo: this needs to be updated to use $this->ci->db->update(), if possible
+				$sql = "UPDATE {$prefix}email_queue SET success=1, attempts=attempts+1, last_attempt = NOW(), date_sent = NOW() WHERE id = " . $email->id;
 				$this->ci->db->query($sql);
-			}
-			else
-			{
-				// Error sending email
+			} else {
+                // Error sending email
+                // @todo: this needs to be updated to use $this->ci->db->update(), if possible
 				$sql = "UPDATE {$prefix}email_queue SET attempts = attempts+1, last_attempt=NOW() WHERE id=". $email->id;
 				$this->ci->db->query($sql);
 
-				if ($this->debug)
-				{
+				if ($this->debug) {
 					$this->debug_message = $this->ci->email->print_debugger();
 				}
 
-				$success = FALSE;
+				$success = false;
 			}
 		}//end foreach
 
 		return $success;
-
 	}//end process_queue()
 
 	//--------------------------------------------------------------------
@@ -344,8 +323,7 @@ class Emailer
 	 */
 	public function enable_debug($enable_debug)
 	{
-		$this->debug = $enable_debug;
-
+		$this->debug = (bool)$enable_debug;
 	}//end enable_debug()
 
 	//--------------------------------------------------------------------
@@ -359,17 +337,10 @@ class Emailer
 	 */
 	public function queue_emails($queue)
 	{
-		if ($queue !== TRUE && $queue !== FALSE)
-		{
-			return;
-		}
-
-		$this->queue_emails = $queue;
-
+		$this->queue_emails = (bool)$queue;
 	}//end queue_emails()
 
 	//--------------------------------------------------------------------
 
 }//end class
-
 /* End of file emailer.php */

@@ -27,8 +27,6 @@
  */
 class Emailer_model extends BF_Model
 {
-
-
 	/**
 	 * Name of the table
 	 *
@@ -54,7 +52,7 @@ class Emailer_model extends BF_Model
 	 *
 	 * @var bool
 	 */
-	protected $soft_deletes = FALSE;
+	protected $soft_deletes = false;
 
 	/**
 	 * The date format to use
@@ -72,7 +70,7 @@ class Emailer_model extends BF_Model
 	 *
 	 * @var bool
 	 */
-	protected $set_created = FALSE;
+	protected $set_created = false;
 
 	/**
 	 * Set the modified time automatically on editing a record
@@ -81,6 +79,6 @@ class Emailer_model extends BF_Model
 	 *
 	 * @var bool
 	 */
-	protected $set_modified = FALSE;
+	protected $set_modified = false;
 
 }//end class

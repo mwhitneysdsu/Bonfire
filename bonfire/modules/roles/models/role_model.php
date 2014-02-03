@@ -243,19 +243,19 @@ class Role_model extends BF_Model
 
 		if ($purge === TRUE)
 		{
-			// temporarily set the soft_deletes to TRUE.
+			// Temporarily set the soft_deletes to false
 			$this->soft_deletes = FALSE;
 		}
 
-		// get the name for management deletion later
-		$role = $this->role_model->find($id);
+		// Get the name of the role so we can delete the manage permission later
+		$role = $this->find($id);
 
-		// delete the record
+		// Delete the role
 		$deleted = parent::delete($id);
 
 		if ($deleted === TRUE)
 		{
-			// Now update the users to the default role
+			// Update users with this role to the default role
 			if ( ! class_exists('User_model'))
 			{
 				$this->load->model('users/User_model','user_model');
@@ -263,10 +263,10 @@ class Role_model extends BF_Model
 
 			$this->user_model->set_to_default_role($id);
 
-			// now delete the role_permissions for this role
+			// Delete the role_permissions for this role
 			$this->role_permission_model->delete_for_role($id);
 
-			// now delete the manage permission for this role
+			// Delete the manage permission for this role
 			$permission_name = 'Permissions.' . ucwords($role->role_name) . '.Manage';
 
 			if ( ! class_exists('Permission_model'))
@@ -275,9 +275,14 @@ class Role_model extends BF_Model
 			}
 
 			$perm = $this->permission_model->find_by('name', $permission_name);
+            /**
+             * @todo The statements below should not be accessing the database
+             * directly through $this->db, they should instead be using
+             * $this->role_permission_model and $this->permission_model
+             */
 			if ($perm)
 			{
-				// remove the role_permissions for this permission
+				// Remove the role_permissions for this permission
 				$this->db->delete('role_permissions', array('permission_id' => $perm->permission_id));
 
 				if ($purge === TRUE)

@@ -21,7 +21,6 @@
 	THE SOFTWARE.
 */
 //Translator: Sajjad Servatjoo <sajjad.servatjoo[at]gmail[dot]com>
-
 $lang['ui_keyboard_shortcuts']	= 'کليد هاي ميانبر در فايل تنظيمات برنامه تعريف مي شوند. کليد هاي ميانبر موجود عبرارت اند از:';
 $lang['ui_add_shortcut']		= 'کليد ميانبر جديد';
 $lang['ui_remove_shortcut']		= 'حذف';

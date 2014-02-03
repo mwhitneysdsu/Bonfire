@@ -47,15 +47,19 @@ class Reports extends Admin_Controller
 		$this->lang->load('activities');
 		$this->lang->load('datatable');
 
-		Template::set('toolbar_title', lang('activity_title'));
+		Assets::add_js(array(
+            'js/bootstrap.js',
+            'js/jquery.dataTables.min.js',
+            'js/bootstrap-dataTables.js'
+        ));
+		Assets::add_css(array(
+            'css/datatable.css',
+            'css/bootstrap-dataTables.css',
+        ));
 
-		Assets::add_js(Template::theme_url('js/bootstrap.js'));
 		Assets::add_js($this->load->view('reports/activities_js', null, true), 'inline');
 
-		Assets::add_js( array ( Template::theme_url('js/jquery.dataTables.min.js' )) );
-		Assets::add_js( array ( Template::theme_url('js/bootstrap-dataTables.js' )) );
-		Assets::add_css( array ( Template::theme_url('css/datatable.css') ) ) ;
-		Assets::add_css( array ( Template::theme_url('css/bootstrap-dataTables.css') ) ) ;
+		Template::set('toolbar_title', lang('activity_title'));
 
 		if (has_permission('Activities.User.View')
 				|| has_permission('Activities.Module.View')
@@ -80,38 +84,47 @@ class Reports extends Admin_Controller
 	public function index()
 	{
 		if (has_permission('Activities.User.View')
-				|| has_permission('Activities.Module.View')
-				|| has_permission('Activities.Date.View'))
+            || has_permission('Activities.Module.View')
+            || has_permission('Activities.Date.View')
+            )
 		{
 			// get top 5 modules
-			$this->db->group_by('module');
-			Template::set('top_modules', $this->activity_model->select('module, COUNT(module) AS activity_count')
-					->where('activities.deleted', 0)
-					->limit(5)
-					->order_by('activity_count', 'DESC')
-					->find_all() );
+            $top_modules = $this->activity_model->select(array('module', 'COUNT(module) AS activity_count'))
+                                                ->where('activities.deleted', 0)
+                                                ->limit(5)
+                                                ->group_by('module')
+                                                ->order_by('activity_count', 'DESC')
+                                                ->find_all();
 
 			// get top 5 users and usernames
-			$this->db->join('users', 'activities.user_id = users.id', 'left');
-			$query = $this->db->select('username, user_id, COUNT(user_id) AS activity_count')
-					->where('activities.deleted', 0)
-					->group_by('user_id')
-					->order_by('activity_count','DESC')
-					->limit(5)
-					->get($this->activity_model->get_table());
-			Template::set('top_users', $query->result());
+			$top_users = $this->activity_model->select(array('username', 'COUNT(user_id) AS activity_count'))
+                                                ->join('users', 'activities.user_id = users.id', 'left')
+                                                ->where('activities.deleted', 0)
+                                                ->limit(5)
+                                                ->group_by('user_id')
+                                                ->order_by('activity_count','DESC')
+                                                ->find_all();
 
-			Template::set('users', $this->user_model->where('users.deleted', 0)->find_all());
-			Template::set('modules', module_list());
-			Template::set('activities', $this->activity_model->find_all());
+            $activities = $this->activity_model->select(array('activity_id', 'created_on'))
+                                               ->where('activities.deleted', 0)
+                                               ->find_all();
+
+            $users = $this->user_model->select(array('id', 'username'))
+                                      ->where('users.deleted', 0)
+                                      ->find_all();
+
+			Template::set('top_modules', $top_modules);
+			Template::set('top_users', $top_users);
+			Template::set('users', $users);
+			Template::set('modules', Modules::list_modules());
+			Template::set('activities', $activities);
+
 			Template::render();
 		}
-		else if(has_permission('Activities.Own.View'))
+		else if (has_permission('Activities.Own.View'))
 		{
 			$this->activity_own();
-
 		}
-
 	}//end index()
 
 	//--------------------------------------------------------------------
@@ -125,14 +138,12 @@ class Reports extends Admin_Controller
 	 */
 	public function activity_user()
 	{
-
-		if (!has_permission('Activities.User.View')) {
+		if ( ! has_permission('Activities.User.View')) {
 			Template::set_message(lang('activity_restricted'), 'error');
-			redirect(SITE_AREA .'/reports/activities');
+			redirect(SITE_AREA . '/reports/activities');
 		}
 
 		return $this->_get_activity();
-
 	}//end activity_user()
 
 	//--------------------------------------------------------------------
@@ -146,14 +157,12 @@ class Reports extends Admin_Controller
 	 */
 	public function activity_own()
 	{
-
-		if (!has_permission('Activities.Own.View')) {
+		if ( ! has_permission('Activities.Own.View')) {
 			Template::set_message(lang('activity_restricted'), 'error');
 			redirect(SITE_AREA .'/reports/activities');
 		}
 
 		return $this->_get_activity('activity_own', $this->current_user->id);
-
 	}//end activity_own()
 
 	//--------------------------------------------------------------------
@@ -173,7 +182,6 @@ class Reports extends Admin_Controller
 
 		Template::set_message(lang('activity_restricted'), 'error');
 		redirect(SITE_AREA .'/reports/activities');
-
 	}//end activity_module()
 
 	//--------------------------------------------------------------------
@@ -193,9 +201,7 @@ class Reports extends Admin_Controller
 
 		Template::set_message(lang('activity_restricted'), 'error');
 		redirect(SITE_AREA .'/reports/activities');
-
 	}//end activity_date()
-
 
 	//--------------------------------------------------------------------
 
@@ -214,7 +220,6 @@ class Reports extends Admin_Controller
 		$this->_delete_activity($action, $which);
 
 		redirect(SITE_AREA .'/reports/activities');
-
 	} // end delete()
 
 	//--------------------------------------------------------------------
@@ -237,64 +242,66 @@ class Reports extends Admin_Controller
 	{
 		// check for permission to delete this
 		$permission = str_replace('activity_', '',$action);
-		if (!has_permission('Activities.'.ucfirst($permission).'.Delete')) {
+		if ( ! has_permission('Activities.' . ucfirst($permission) . '.Delete'))
+        {
 			Template::set_message(lang('activity_restricted'), 'error');
 			return;
 		}
 
 		if (empty($action))
-		{
-			Template::set_message('Delete section not specified', 'error');
+        {
+			Template::set_message(lang('activity_delete_unspecified_action'), 'error');
 			return;
 		}
 
 		if (empty($which))
-		{
-			Template::set_message('Delete value not specified', 'error');
+        {
+			Template::set_message(lang('activity_delete_unspecified_value'), 'error');
 			return;
 		}
 
 		// different delete where statement switch
 		switch ($action)
-		{
+        {
 			case 'activity_date':
 				$value = 'activity_id';
-			break;
+                break;
 
 			case 'activity_module':
 				$value = 'module';
-			break;
+                break;
 
 			default:
 				$value = 'user_id';
-			break;
+                break;
 		}
 
 		// set a default delete then check if delete "all" was chosen
-		$delete = ($value == 'activity_id') ? $value ." < '".$which."'" : $value ." = '".$which."'";
+		$delete = ($value == 'activity_id') ? $value . " < '" . $which . "'"
+                                            : $value . " = '" . $which . "'";
 		if ($which == 'all')
-		{
-			$delete = $value ." != 'tsTyImbdOBOgwIqtb94N4Gr6ctatWVDnmYC3NfIfczzxPs0xZLNBnQs38dzBYn8'";
+        {
+			$delete = $value . " != 'tsTyImbdOBOgwIqtb94N4Gr6ctatWVDnmYC3NfIfczzxPs0xZLNBnQs38dzBYn8'";
 		}
 
 		// check if they can delete their own stuff
-		$delete .= (has_permission('Activities.Own.Delete')) ? '' : " AND user_id != '" . $this->auth->user_id()."'";
+		$delete .= (has_permission('Activities.Own.Delete')) ? '' : " AND user_id != '" . $this->auth->user_id() . "'";
 
 		$affected = $this->activity_model->delete_where($delete);
 		if (is_numeric($affected))
-		{
-			Template::set_message(sprintf(lang('activity_deleted'), $affected), 'success');
-			$this->activity_model->log_activity($this->auth->user_id(), 'deleted ' . $affected . ' activities', 'activities');
+        {
+            $message = sprintf(lang('activity_deleted'), $affected);
+			Template::set_message($message, 'success');
+			$this->activity_model->log_activity($this->auth->user_id(), $message, 'activities');
 		}
-		else if (isset($affected))
-		{
-			Template::set_message(lang('activity_nothing'),'attention');
+        elseif (isset($affected))
+        {
+			Template::set_message(lang('activity_nothing'), 'attention');
 		}
-		else
-		{
-			Template::set_message('Error : '.$this->activity_model->error, 'error');
+        else
+        {
+			Template::set_message('Error : ' . $this->activity_model->error, 'error');
 		}
-
 	}//end _delete_activity()
 
 	/**
@@ -312,7 +319,7 @@ class Reports extends Admin_Controller
 		// check if $find_value has anything in it
 		if ($find_value === FALSE)
 		{
-			$find_value = ($this->input->post($which.'_select') == '') ? $this->uri->segment(5) : $this->input->post($which.'_select');
+			$find_value = ($this->input->post($which . '_select') == '') ? $this->uri->segment(5) : $this->input->post($which.'_select');
 		}
 
 		if (isset($_POST['delete']))
@@ -329,55 +336,51 @@ class Reports extends Admin_Controller
 		switch ($which)
 		{
 			case 'activity_module':
-				$modules = module_list();
+				$modules = Modules::list_modules();
 				foreach ($modules as $mod)
 				{
 					$options[$mod] = $mod;
-
 					if ($find_value == $mod)
 					{
 						$name = ucwords($mod);
 					}
 				}
 				$where = 'module';
-			break;
+    			break;
 
 			case 'activity_date':
-				foreach($this->activity_model->find_all_by('deleted', 0) as $e)
+				foreach ($this->activity_model->find_all_by('deleted', 0) as $e)
 				{
 					$options[$e->activity_id] = $e->created_on;
-
 					if ($find_value == $e->activity_id)
 					{
 						$name = $e->created_on;
 					}
 				}
 				$where = 'activity_id';
-			break;
+    			break;
 
 			case 'activity_own':
 			default:
 				if (has_permission('Activities.User.View'))
 				{
-					foreach($this->user_model->where('users.deleted', 0)->find_all() as $e)
+					foreach ($this->user_model->where('users.deleted', 0)->find_all() as $e)
 					{
 						$options[$e->id] = $e->username;
-
 						if ($find_value == $e->id)
 						{
 							$name = $e->username;
 						}
 					}
 				}
-				else if (has_permission('Activities.Own.View'))
+				elseif (has_permission('Activities.Own.View'))
 				{
 					$options = array();
 					$options[$this->current_user->id] = $this->current_user->username;
 					$name = $this->current_user->username;
 				}
-
 				$where = 'user_id';
-			break;
+    			break;
 		}
 
 		// set some vars for the view
@@ -392,16 +395,17 @@ class Reports extends Admin_Controller
 
 		// if we have a filter, apply it here
 		$this->db->order_by($where,'asc');
-		if (!empty($find_value) && $find_value != 'all')
+		if ( ! empty($find_value) && $find_value != 'all')
 		{
 			$where = ($where == 'activity_id') ? 'activity_id <' : $where;
-			$this->db->where($where,$find_value);
-
-			$this->db->where('activities.deleted', 0);
-			$total = $this->activity_model->count_by($where, $find_value);
+			$total = $this->activity_model->where(array(
+                                                    $where => $find_value,
+                                                    'activities.deleted' => 0,
+                                                ))
+                                          ->count_by($where, $find_value);
 
 			// set this again for use in the main query
-			$this->db->where($where,$find_value);
+			$this->db->where($where, $find_value);
 		}
 		else
 		{
@@ -409,7 +413,7 @@ class Reports extends Admin_Controller
 		}
 
 		// does user have permission to see own records?
-		if (!has_permission('Activities.Own.View'))
+		if ( ! has_permission('Activities.Own.View'))
 		{
 			$this->db->where('activities.user_id != ', $this->auth->user_id());
 		}
@@ -424,7 +428,7 @@ class Reports extends Admin_Controller
 
 		$limit = $this->settings_lib->item('site.list_limit');
 
-		$this->pager['base_url'] 			= current_url() .'?';
+		$this->pager['base_url'] 			= current_url() . '?';
 		$this->pager['total_rows'] 			= $total;
 		$this->pager['per_page'] 			= $limit;
 		$this->pager['page_query_string']	= true;
@@ -435,15 +439,13 @@ class Reports extends Admin_Controller
 		$this->db->join('users', 'activities.user_id = users.id', 'left');
 		$this->db->order_by('activity_id','desc'); // most recent stuff on top
 		$this->db->select('activity, module, activities.created_on AS created, username');
-		Template::set('activity_content', $this->activity_model->limit($limit, $offset)->find_all());
 
+		Template::set('activity_content', $this->activity_model->limit($limit, $offset)->find_all());
 		Template::set('select_options', $options);
 
 		Template::set_view('reports/view');
 		Template::render();
-
 	}//end _get_activity()
-
 
 	//--------------------------------------------------------------------
 

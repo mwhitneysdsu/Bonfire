@@ -12,7 +12,7 @@
 	<fieldset>
 		<legend><?php echo lang('role_details') ?></legend>
 
-		<div class="control-group <?php echo form_has_error('role_name') ? 'error' : ''; ?>">
+		<div class="control-group<?php echo form_error('role_name') ? ' error' : ''; ?>">
 			<label class="control-label" for="role_name"><?php echo lang('role_name'); ?></label>
 			<div class="controls">
 				<input type="text" name="role_name" id="role_name" class="input-xlarge" value="<?php echo set_value('role_name', isset($role) ? $role->role_name : '') ?>" />
@@ -20,7 +20,7 @@
 			</div>
 		</div>
 
-		<div class="control-group <?php echo form_has_error('description') ? 'error' : ''; ?>" style="vertical-align: top">
+		<div class="control-group<?php echo form_error('description') ? ' error' : ''; ?>" style="vertical-align: top">
 			<label class="control-label" for="description"><?php echo lang('bf_description'); ?></label>
 			<div class="controls">
 				<textarea name="description" id="description" rows="3" class="input-xlarge"><?php echo set_value('description', isset($role) ? $role->description : '') ?></textarea>
@@ -28,7 +28,7 @@
 			</div>
 		</div>
 
-		<div class="control-group <?php echo form_has_error('login_destination') ? 'error' : ''; ?>">
+		<div class="control-group<?php echo form_error('login_destination') ? ' error' : ''; ?>">
 			<label class="control-label" for="login_destination"><?php echo lang('role_login_destination'); ?>?</label>
 			<div class="controls">
 				<input type="text" name="login_destination" id="login_destination" class="input-xlarge" value="<?php echo set_value('login_destination', isset($role) ? $role->login_destination : '') ?>"  />
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-		<div class="control-group <?php echo form_has_error('default') ? 'error' : ''; ?>">
+		<div class="control-group<?php echo form_error('default') ? ' error' : ''; ?>">
 			<label class="control-label" for="default"><?php echo lang('role_default_role')?></label>
 			<div class="controls">
 				<label class="checkbox" for="default" >

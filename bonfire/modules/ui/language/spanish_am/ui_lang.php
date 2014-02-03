@@ -44,4 +44,3 @@ $lang['ui_shortcut_save_error']			= 'Hubo un error al guardar las teclas de mét
 $lang['ui_shortcut_error_exists']		= 'tecla de método abreviado ya existe';
 $lang['ui_shortcut_error_unavailable']	= 'La acción no esta disponible';
 $lang['ui_shortcut_error']				= 'Los espacios no están permitidos en la tecla de método abreviado';
-

@@ -78,12 +78,12 @@ class Developer extends Admin_Controller
 	 */
 	public function modules()
 	{
-		$modules = module_list();
+		$modules = Modules::list_modules();
 		$configs = array();
 
 		foreach ($modules as $module)
 		{
-			$configs[$module] = module_config($module);
+			$configs[$module] = Modules::config($module);
 
 			if (!isset($configs[$module]['name']))
 			{

@@ -87,7 +87,7 @@ endif;
 <div class="control-group<?php echo iif(form_error('timezone'), $errorClass); ?>">
     <label class="control-label required" for="timezones"><?php echo lang('bf_timezone'); ?></label>
     <div class="controls">
-        <?php echo timezone_menu(set_value('timezones', isset($user) ? $user->timezone : $defaultTimezone), $controlClass); ?>
+        <?php echo timezone_menu(set_value('timezones', isset($user) ? $user->timezone : $defaultTimezone), $controlClass, 'timezones', array('id' => 'timezones')); ?>
         <span class="help-inline"><?php echo form_error('timezones'); ?></span>
     </div>
 </div>

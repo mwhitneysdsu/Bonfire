@@ -5,9 +5,9 @@
  * APPLICATION ENVIRONMENT
  *---------------------------------------------------------------
  *
- * You can load different configurations depending on your
- * current environment. Setting the environment also influences
- * things like logging and error reporting.
+ * You can load different configurations depending on your current environment.
+ * Setting the environment also influences things like logging and error
+ * reporting.
  *
  * This can be set to anything, but default usage is:
  *
@@ -25,16 +25,15 @@
  * ERROR REPORTING
  *---------------------------------------------------------------
  *
- * Different environments will require different levels of error reporting.
- * By default development will show errors but testing and live will hide them.
+ * Different environments will require different levels of error reporting. By
+ * default, development will show errors but testing and production will hide
+ * them.
  */
 
-	switch (ENVIRONMENT)
-	{
+	switch (ENVIRONMENT) {
 		case 'development':
 			error_reporting(E_ALL);
-			if (!ini_get('display_errors'))
-			{
+			if ( ! ini_get('display_errors')) {
 				ini_set('display_errors', 1);
 			}
 			break;
@@ -49,19 +48,27 @@
 	}
 
 /*
-|---------------------------------------------------------------
-| DEFAULT INI SETTINGS
-|---------------------------------------------------------------
-|
-| Necessary settings for a higher compatibility. Inspired by PyroCMS code.
-|
-*/
-	// PHP 5.3 requires this
-	if(ini_get('date.timezone') == '')
-	{
-		date_default_timezone_set('GMT');
-	}
-
+ *******************************************************************************
+ * DEFAULT INI SETTINGS
+ *******************************************************************************
+ *
+ * Necessary setting for PHP 5.3+ compatibility.
+ *
+ * Note: This now defaults to UTC instead of GMT if te date.timezone value is
+ * not set (PHP 5.4+), but on PHP 5.3 it may use the TZ environment variable or
+ * attempt to guess the timezone from the host operating system. It is
+ * recommended to set date.timezone to avoid this, or you can replace
+ * @date_default_timezone_get() below with 'UTC' or 'GMT', as desired.
+ *
+ * Inspired by PyroCMS and Composer code.
+ * @link https://www.pyrocms.com/ PyroCMS
+ * @link http://getcomposer.org/ Composer
+ */
+    if (ini_get('date.timezone') == ''
+        && function_exists('date_default_timezone_set')
+        && function_exists('date_default_timezone_get')) {
+        date_default_timezone_set(@date_default_timezone_get());
+    }
 
 /*
  *---------------------------------------------------------------

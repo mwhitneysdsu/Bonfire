@@ -70,3 +70,6 @@ $lang['activity_logged']				= "Activities Logged";
 $lang['activity_none_found']			= 'You do not have permissions to delete any activities.';
 $lang['activity_all']					= 'All';
 $lang['activity_cleanup']				= 'Activity Cleanup';
+$lang['activity_delete_unspecified_action'] = 'Delete section not specified';
+$lang['activity_delete_unspecified_value']  = 'Delete value not specified';
+$lang['activity_user_not_found']        = 'Not found';

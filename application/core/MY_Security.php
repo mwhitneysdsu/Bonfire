@@ -1,17 +1,22 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+<?php if ( ! defined('BASEPATH')) { exit('No direct script access allowed'); }
 
-class MY_Security extends CI_Security {
-
-    /*
-        An array of controllers to ignore during the CSRF
-        cycle. If part of a module, it should be listed as
-
-            {module}/{controller}
+class MY_Security extends CI_Security
+{
+    /**
+     * @var Array Controllers to ignore during the CSRF cycle.
+     *
+     * If part of a module, the controller should be listed as:
+     * {module}/{controller}
      */
-    protected $ignored_controllers = array('stats/stats');
+    protected $ignored_controllers = array();
 
     //--------------------------------------------------------------------
 
+    /**
+     * The constructor
+     *
+     * @return void
+     */
     public function __construct()
     {
         parent::__construct();
@@ -20,9 +25,24 @@ class MY_Security extends CI_Security {
     //--------------------------------------------------------------------
 
     /**
-     * Override the csrf_verify method to allow us to set controllers
-     * and modules to override.
+     * Show CSRF Error
      *
+     * Override the csrf_show_error method to improve the error message
+     *
+     * @return void
+     */
+    public function csrf_show_error()
+    {
+        show_error('The action you have requested is not allowed. You either do not have access, or your login session has expired and you need to sign in again.');
+    }
+
+    /**
+     * Verify Cross Site Request Forgery Protection
+     *
+     * Override the csrf_verify method to allow us to set controllers and
+     * modules to override.
+     *
+     * @return object   Returns $this to allow method chaining
      */
     public function csrf_verify()
     {
@@ -30,17 +50,13 @@ class MY_Security extends CI_Security {
 
         $module = $RTR->fetch_module();
         $controller = $RTR->fetch_class();
+        $bypass = in_array("{$module}/{$controller}", $this->ignored_controllers);
 
-        $bypass = FALSE;
-
-        if (in_array($module .'/'. $controller, $this->ignored_controllers))
-        {
-            $bypass = TRUE;
+        if ($bypass) {
+            return $this;
         }
 
-        if ( ! $bypass) {
-            parent::csrf_verify();
-        }
+        return parent::csrf_verify();
     }
 
     //--------------------------------------------------------------------

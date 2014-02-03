@@ -65,7 +65,7 @@ class Events
 	 */
 	public static function init()
 	{
-		if (!function_exists('read_config'))
+		if ( ! function_exists('read_config'))
 		{
 			$ci =& get_instance();
 			$ci->load->helper('config_file');
@@ -76,7 +76,7 @@ class Events
 		self::$events = read_config('events', TRUE, NULL, FALSE);
 
         // merge other modules events
-        foreach(module_list(TRUE) as $module)
+        foreach(Modules::list_modules(TRUE) as $module)
         {
         	$module_events = read_config('events', TRUE, $module, TRUE);
 
@@ -120,12 +120,6 @@ class Events
 			return;
 		}
 
-		if (!function_exists('module_file_path'))
-		{
-			$ci =& get_instance();
-			$ci->load->helper('application');
-		}
-
 		$subscribers = self::$events[$event_name];
 
 		foreach ($subscribers as $subscriber)
@@ -135,7 +129,7 @@ class Events
 				$subscriber['filename'] .= '.php';
 			}
 
-			$file_path = module_file_path($subscriber['module'], $subscriber['filepath'], $subscriber['filename']);
+			$file_path = Modules::file_path($subscriber['module'], $subscriber['filepath'], $subscriber['filename']);
 
 			if (!file_exists($file_path))
 			{

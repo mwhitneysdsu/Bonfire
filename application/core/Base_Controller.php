@@ -174,7 +174,7 @@ class Base_Controller extends MX_Controller
 			}
 
 			// Make the current user available in the views
-			if (!class_exists('Template'))
+			if ( ! class_exists('Template'))
 			{
 				$this->load->library('Template');
 			}

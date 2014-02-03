@@ -39,10 +39,11 @@ $lang['us_log_logged_out']			= 'logged out from';
 $lang['us_log_reset']				= 'reset their password.';
 $lang['us_log_register']			= 'registered a new account.';
 $lang['us_log_edit_profile']		= 'updated their profile';
-
+$lang['us_log_status_change']       = 'changed user status';
 
 $lang['us_purge_del_confirm']		= 'Are you sure you want to completely remove the user account(s) - there is no going back?';
 $lang['us_action_purged']			= 'Users purged.';
+$lang['us_action_purge_fail']       = 'We could not purge the user(s): ';
 $lang['us_action_deleted']			= 'The User was successfully deleted.';
 $lang['us_action_not_deleted']		= 'We could not delete the user: ';
 $lang['us_delete_account']			= 'Delete Account';
@@ -173,7 +174,7 @@ $lang['us_admin_approval_pending']  = 'Your account is pending admin approval. Y
 $lang['us_account_not_active'] 		= 'Your account is not yet active please activate your account by entering the code.';
 $lang['us_account_active'] 			= 'Congratulations. Your account is now active!.';
 $lang['us_account_active_login'] 	= 'Your account is active and you can now login.';
-$lang['us_account_reg_complete'] 	= 'Registration to [SITE_TITLE] completed!';
+$lang['us_account_reg_complete'] 	= 'Registration to [SITE_TITLE] website completed!';
 $lang['us_active_status_changed'] 	= 'The user status was successfully changed.';
 $lang['us_active_email_sent'] 		= 'Activation email was sent.';
 // Activation Errors
@@ -207,3 +208,10 @@ $lang['us_forced_password_reset_note']	= 'Due to security reasons, you must choo
 $lang['us_back_to']					= 'Back to ';
 $lang['us_no_account']              = 'No account?';
 $lang['us_force_password_reset']    = 'Force password reset on next login';
+
+/* Page Titles */
+$lang['us_users_activate_title']            = 'Account Activation';
+$lang['us_users_login_title']               = 'Login';
+$lang['us_users_forgot_password_title']     = 'Password Reset';
+$lang['us_users_resend_activation_title']   = 'Activate Account';
+$lang['us_users_register_title']            = 'Register';
